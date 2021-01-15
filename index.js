@@ -1,15 +1,28 @@
 //Import some assets from Vortex we'll need.
+//Required Stuff
 const path = require('path');
 const { actions, fs, DraggableList, FlexLayout, MainPage, log, selectors, util } = require('vortex-api');
 const winapi = require('winapi-bindings');
 const React = require('react');
 const BS = require('react-bootstrap');
+const { remote } = require('electron');
+//End Required Stuff
+
+//Parser Constants
+const IniParser = require('vortex-parse-ini');
+const parser = new IniParser.default(new IniParser.WinapiFormat());
+const BRTC_INI = 'PCPODCustom.INI';
+const iniPath = path.join(remote.app.getPath('documents'), 'My Games', 'Fallout 76');
+//End Parser Constants
 
 const { connect } = require('react-redux');
 
+//Game Details
 const GAME_ID = 'bloodrayneterminalcut';
 const STEAMAPP_ID = '1373510';
 const GOGAPP_ID = '1598751450';
+const GAME_NAME = 'Bloodrayne Terminal Cut';
+//End Game Details
 
 const MOD_FILE_EXT = ".zip";
 
@@ -19,7 +32,7 @@ function main(context) {
 	//This is the main function Vortex will run when detecting the game extension.
 	context.registerGame({
 		id: GAME_ID,
-		name: 'Bloodrayne Terminal Cut',
+		name: GAME_NAME,
 		mergeMods: true,
 		queryPath: findGame,
 		supportedTools: [],
@@ -176,6 +189,45 @@ function findGame() {
       .then(game => game.gamePath);
   }
 }
+
+//Create INI
+function onGameModeActivated(gameId, api) {
+    // Exit if we aren't managing Fallout 76
+    if (gameId !== GAME_ID) return;
+    const ini = path.join(iniPath, BRTC_INI)
+
+    // Make sure the folder in My Documents exists, create it if not. 
+    return fs.ensureDirAsync(iniPath)
+    .then(() => {
+        // See if our INI exists
+        fs.statAsync(ini)
+        .then(() => ini)
+        .catch(err => {
+            // If the INI doesn't exist, make one.
+            if (err.code === 'ENOENT') return createINI(ini, api);
+            // report any other errors.
+            else api.sendNotification({id: 'bloodrayneterminalcut-ini-error', type: 'error', title: 'Error reading PCPODCustom.INI', message: `${err.code} - ${err.message}`});
+        })
+    })
+    .catch((err) => console.log('Error checking INI folder', err))
+
+}
+
+function createINI(iniLocation, api) {
+    // Creates a new PCPODCustom.INI with the default settings
+    const defaultData = 
+        '[Archive]\n' +
+        'sResourceArchive2List=\n' +
+        'sResourceDataDirsFinal=STRINGS\\\n' +
+        'bInvalidateOlderFiles=1\n';
+
+    return fs.writeFileAsync(iniLocation, defaultData).then(() => iniLocation)
+    .catch((err) => {
+        api.sendNotification({id:'bloodrayneterminalcut-ini-create-error', type: 'error', title: 'Could not create PCPODCustom.INI', message: `${err.code} - ${err.message}`});
+        return '';
+    });
+}
+//End Create INI
 
 function prepareForModding(discovery) {
     let gamePath = path.join(discovery.path)
