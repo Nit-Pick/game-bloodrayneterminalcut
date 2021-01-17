@@ -194,22 +194,20 @@ function findGame() {
 function onGameModeActivated(gameId, api) {
     // Exit if we aren't managing Fallout 76
     if (gameId !== GAME_ID) return;
-    const ini = path.join(iniPath, BRTC_INI)
+    const state = api.store.getState()
+    const gamePath = util.getSafe(state, ['settings', 'gameMode', 'discovered', gameId, 'path'], undefined);
+    
+    if (!gamePath) throw new Error('Unable to find game path');
+    const ini = path.join(gamePath, BRTC_INI);
 
     // Make sure the folder in My Documents exists, create it if not. 
-    return fs.ensureDirAsync(iniPath)
+    return fs.statAsync(ini)
     .then(() => {
-        // See if our INI exists
-        fs.statAsync(ini)
-        .then(() => ini)
-        .catch(err => {
-            // If the INI doesn't exist, make one.
-            if (err.code === 'ENOENT') return createINI(ini, api);
-            // report any other errors.
-            else api.sendNotification({id: 'bloodrayneterminalcut-ini-error', type: 'error', title: 'Error reading PCPODCustom.INI', message: `${err.code} - ${err.message}`});
+        // Our INI exists, so we can do stuff with it.
         })
-    })
-    .catch((err) => console.log('Error checking INI folder', err))
+    .catch((err) => {
+        // INI may not exist. 
+      });
 
 }
 
