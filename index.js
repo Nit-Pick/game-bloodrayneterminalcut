@@ -12,7 +12,6 @@ const { remote } = require('electron');
 const IniParser = require('vortex-parse-ini');
 const parser = new IniParser.default(new IniParser.WinapiFormat());
 const BRTC_INI = 'PCPODCustom.INI';
-const iniPath = path.join(remote.app.getPath('documents'), 'My Games', 'Fallout 76');
 //End Parser Constants
 
 const { connect } = require('react-redux');
