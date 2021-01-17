@@ -224,6 +224,16 @@ function createINI(iniLocation, api) {
         return '';
     });
 }
+const BASE_PODS = ['PCART', 'PCART2', 'PCMODEL', 'PCSET', 'PCSOUND', 'STARTUP', 'WORLD'];
+
+function writeLoadOrder(iniPath, modPODs) {
+	// Use a set to ensure there are no duplicate entries
+	let loadOrder = new Set([...BASE_PODS, ...modPODs]);
+	// Convert back to an array, because sets suck for this next bit.
+	loadOrder = Array.from(loadOrder);
+	const output = `${loadOrder.length}\n${loadOrder.join('\n')}`;
+	fs.writeFile(iniPath, output);
+}
 //End Create INI
 
 function prepareForModding(discovery) {
