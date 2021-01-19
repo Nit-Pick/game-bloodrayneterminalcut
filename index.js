@@ -66,9 +66,11 @@ function main(context) {
 		},
 		createInfoPanel: () => 'Load order info goes here.'
 	});
-
-	context.api.onAsync('did-deploy', updateLoadOrder(context.api));
-	context.api.onAsync('did-purge', updateLoadOrder(context.api));
+	context.once(() => {
+		// After the api is initialised, we register for these events
+		context.api.onAsync('did-deploy', updateLoadOrder(context.api));
+		context.api.onAsync('did-purge', updateLoadOrder(context.api));
+	});
 		
 	return true;
 }
