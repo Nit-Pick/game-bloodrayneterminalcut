@@ -1,7 +1,7 @@
 //Import some assets from Vortex we'll need.
 //Required Stuff
 const path = require('path');
-const { actions, fs,  log, selectors, util } = require('vortex-api');
+const { fs,  log, selectors, util } = require('vortex-api');
 //End Required Stuff
 
 //Parser Constants
@@ -66,8 +66,38 @@ function main(context) {
 		},
 		createInfoPanel: () => 'Load order info goes here.'
 	});
+
+	context.api.onAsync('did-deploy', updateLoadOrder(context.api));
+	context.api.onAsync('did-purge', updateLoadOrder(context.api));
 		
 	return true;
+}
+
+function findGame() {
+	return util.GameStoreHelper.findByAppId([STEAMAPP_ID, GOGAPP_ID])
+	.then(game => game.gamePath);
+}
+
+async function updateLoadOrder(api) {
+	const state = api.store.getState();
+	const gameId = selectors.activeGameId(state);
+	// Exit if this isn't our game.
+	if (gameId !== GAME_ID) return;
+	const gamePath = util.getSafe(state, ['settings', 'gameMode', 'discovered', GAME_ID, 'path'], undefined);
+	// Exit if we couldn't get the game path.
+	if (!gamePath) return;
+	try {
+		// Read the game directory.
+		const dir = await fs.readdirAsync(gamePath);
+		// Filter out non-POD files and vanilla pods
+		const pods = dir.filter(file => path.extname(file).toLowerCase() === MOD_FILE_EXT.toLowerCase())
+			.filter(pod => BASE_PODS.includes(pod.toUpperCase()));
+		return writeLoadOrder(getINIPath(state), pods);
+	}
+	catch(err) {
+		log('warn', 'Error updating loadorder', err);
+	}
+	
 }
 
 // Preset runs on loading the page.
