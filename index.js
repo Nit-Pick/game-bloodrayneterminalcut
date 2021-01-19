@@ -74,14 +74,14 @@ function main(context) {
 async function preSort(api, items, direction) {
 	// Get the load order INI file.
 	const state = api.store.getState();
-	const gamePath = util.getSafe(state, ['settings', 'gameMode', 'discovered', gameId, 'path'], undefined);
+	const gamePath = util.getSafe(state, ['settings', 'gameMode', 'discovered', GAME_ID, 'path'], undefined);
 	if (!gamePath) return [];
 	const iniPath = path.join(gamePath, BRTC_INI);
 
 	// Try to read the existing INI values. 
 	let iniLoadOrder = [];
 	try {
-		const raw = fs.readFileasync(iniPath);
+		const raw = await fs.readFileasync(iniPath);
 		// Chop off any lines that don't end with ".pod"
 		iniLoadOrder = raw.split('\n').filter(line => !line.toLowerCase().endsWith(MOD_FILE_EXT.toLowerCase()));
 	}
@@ -93,7 +93,7 @@ async function preSort(api, items, direction) {
 	let podFiles = [];
 	try {
 		// List all files and folders in the game directory
-		const dir = fs.readdirAsync(gamePath);
+		const dir = await fs.readdirAsync(gamePath);
 		// Filter to only show POD files. 
 		podFiles = dir.filter(file => path.extname(file).toLowerCase() === MOD_FILE_EXT.toLowerCase());
 	}
