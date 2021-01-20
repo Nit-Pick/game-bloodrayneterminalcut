@@ -113,11 +113,11 @@ async function preSort(api, items, direction) {
 	// Try to read the existing INI values. 
 	let iniLoadOrder = [];
 	try {
-		const raw = await fs.readFileasync(iniPath);
+		const raw = await fs.readFileAsync(iniPath);
 		// Chop off any lines that don't end with ".pod"
 		iniLoadOrder = raw.split('\n').filter(line => !line.toLowerCase().endsWith(MOD_FILE_EXT.toLowerCase()));
 	}
-	catch {
+	catch (err){
 		log('warn', 'Error reading INI file', iniPath, err);
 	}
 
